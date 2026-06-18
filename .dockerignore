@@ -1,0 +1,12 @@
+.git
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+tmp/
+bin/
+.env
+.env.local
+.gocache/
+.gomodcache/
+.gotmp/
