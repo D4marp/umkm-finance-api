@@ -12,6 +12,24 @@ import (
 )
 
 func Connect(cfg *config.Config) (*gorm.DB, error) {
+	// Hubungkan tanpa database terlebih dahulu untuk membuat database jika belum ada
+	dsnWithoutDB := fmt.Sprintf(
+		"%s:%s@tcp(%s:%s)/?charset=utf8mb4&parseTime=True&loc=Local",
+		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort,
+	)
+	dbTemp, err := gorm.Open(mysql.Open(dsnWithoutDB), &gorm.Config{})
+	if err == nil {
+		createSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;", cfg.DBName)
+		if err := dbTemp.Exec(createSQL).Error; err != nil {
+			log.Printf("[DB] Gagal membuat database %s: %v", cfg.DBName, err)
+		}
+		if sqlDB, err := dbTemp.DB(); err == nil {
+			sqlDB.Close()
+		}
+	} else {
+		log.Printf("[DB] Gagal koneksi awal tanpa DB: %v", err)
+	}
+
 	dsn := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName,
